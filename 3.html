@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Motivational Quotes App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f0f0f0;
+      color: #222;
+      transition: all 0.3s ease;
+    }
+    .dark {
+      background-color: #222;
+      color: #eee;
+    }
+    #root {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .like {
+      cursor: pointer;
+      font-size: 1.5rem;
+      user-select: none;
+      margin-left: 10px;
+    }
+    select {
+      padding: 5px;
+      margin-left: 5px;
+    }
+    .quote-card {
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+      font-style: italic;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .author {
+      font-weight: bold;
+      margin-top: 15px;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React, ReactDOM, Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function QuoteButton({ onClick, children, style }) {
+      return (
+        <button onClick={onClick} style={style}>
+          {children}
+        </button>
+      );
+    }
+
+    function ThemeToggle({ theme, toggleTheme }) {
+      const bgColor = theme === "light" ? "#222" : "#eee";
+      const color = theme === "light" ? "#eee" : "#222";
+
+      return (
+        <QuoteButton
+          onClick={toggleTheme}
+          style={{ backgroundColor: bgColor, color }}
+        >
+          {theme === "light" ? "Dark Mode" : "Light Mode"}
+        </QuoteButton>
+      );
+    }
+
+    function QuoteCard({ quote, author, fontSize, theme, liked, toggleLike }) {
+      const backgroundColor = theme === "light" ? "#ddd" : "#333";
+      const color = theme === "light" ? "#222" : "#eee";
+
+      return (
+        <div
+          className="quote-card"
+          style={{ backgroundColor, color, fontSize: fontSize + "px" }}
+        >
+          <p>"{quote}"</p>
+          <p className="author">- {author}</p>
+          <span
+            className="like"
+            style={{ color: liked ? "red" : color }}
+            role="img"
+            aria-label="like"
+            onClick={toggleLike}
+            title={liked ? "Unlike" : "Like"}
+          >
+            {liked ? "❤️" : "🤍"}
+          </span>
+        </div>
+      );
+    }
+
+    function App() {
+      const [quoteData, setQuoteData] = useState({ q: "", a: "" });
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [liked, setLiked] = useState(false);
+      const [fontSize, setFontSize] = useState(20);
+      const [theme, setTheme] = useState("light");
+
+      const fetchQuote = async () => {
+        setLoading(true);
+        setError(null);
+        setLiked(false);
+        try {
+          const res = await axios.get("https://api.allorigins.win/get?url=" + encodeURIComponent("https://zenquotes.io/api/random"));
+          if (res.data && res.data.length > 0) {
+            setQuoteData(res.data[0]);
+          } else {
+            throw new Error("No quote found");
+          }
+        } catch (e) {
+          setError("Failed to fetch quote. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => {
+        fetchQuote();
+      }, []);
+
+      const toggleLike = () => setLiked((prev) => !prev);
+      const toggleTheme = () => setTheme((prev) => (prev === "light" ? "dark" : "light"));
+
+      React.useEffect(() => {
+        if (theme === "dark") {
+          document.body.classList.add("dark");
+        } else {
+          document.body.classList.remove("dark");
+        }
+      }, [theme]);
+
+      return (
+        <div>
+          <h1>Motivational Quotes</h1>
+
+          <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+
+          <div style={{ marginTop: "20px" }}>
+            Font Size:{" "}
+            <select
+              value={fontSize}
+              onChange={(e) => setFontSize(Number(e.target.value))}
+            >
+              {[16, 18, 20, 22, 24, 28, 32].map((size) => (
+                <option key={size} value={size}>
+                  {size}px
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {loading && <p>Loading...</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+
+          {!loading && !error && (
+            <QuoteCard
+              quote={quoteData.q}
+              author={quoteData.a}
+              fontSize={fontSize}
+              theme={theme}
+              liked={liked}
+              toggleLike={toggleLike}
+            />
+          )}
+
+          <QuoteButton
+            onClick={fetchQuote}
+            style={{
+              backgroundColor: theme === "light" ? "#222" : "#eee",
+              color: theme === "light" ? "#eee" : "#222",
+              marginTop: "10px",
+            }}
+          >
+            New Quote
+          </QuoteButton>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
