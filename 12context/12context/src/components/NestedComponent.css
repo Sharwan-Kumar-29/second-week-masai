@@ -1,0 +1,19 @@
+/* NestedComponent.css */
+.nested-box {
+  padding: 20px;
+  margin: 20px auto;
+  width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.nested-box.light {
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+.nested-box.dark {
+  background-color: #444;
+  color: #fff;
+}
